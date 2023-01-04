@@ -1,0 +1,153 @@
+# First, install and load the limma package
+install.packages("limma")
+BiocManager::install(("edgeR"), force = TRUE)
+library(limma)
+library(edgeR)
+
+
+#make matric object
+matrix_object <- as.matrix(spleen.islets@assays$SCT@data)
+write.csv (matrix_object, file ="matrix.object.csv")
+
+
+# Next, load your RNA data into a Matrix object
+rnaseq_data <- read.csv("matrix.object.csv", row.names = 1)
+rnaseq_matrix <- as.matrix(rnaseq_data)
+
+# Then, create a vector of ADT-tagged genes
+TotalSeqC_genes <- grep("TotalSeqC", rnaseq_data)
+
+print(TotalSeqC_genes)
+
+# Use the filterByExpr function to remove ADT-tagged signals from the data
+filtered_rnaseq_matrix <- filterByExpr(matrix_object, TotalSeqC_genes)
+
+# The filtered matrix will now contain only the non-ADT-tagged genes
+
+## something else 
+
+#make matric object
+matrix_object <- as.matrix(spleen.islets@assays$SCT@data)
+write.csv (matrix_object, file ="matrix.object.csv")
+
+
+# Next, load your RNA data into a Matrix object
+rnaseq_data <- read.csv("matrix.object.csv", row.names = 1)
+
+## find in data frame 
+rows_to_remove <- grep("TotalSeqC$", rownames(rnaseq_data))
+
+rnaseq_minusADT <- rnaseq_data[-rows_to_remove, ]
+
+spleen.islets.no.ADT <- CreateSeuratObject(counts = rnaseq_minusADT)
+
+
+
+#create seurat object minus ADT signal 
+spleen.islets.no.ADT <- CreateSeuratObject(counts = rnaseq_minusADT)
+
+
+
+
+
+
+#new method 
+MTgenes <- (grep(“MT-“, rownames(T19), value = TRUE)))
+
+TotalSeqC_genes <- grep("-TotalSeqC$", rownames(spleen.islets), value=TRUE)
+spleen.islet.noADT <- subset(spleen.islets, features = TotalSeqC_genes, invert = TRUE)
+spleen.islet.noRNA <- subset(spleen.islets, features = TotalSeqC_genes)
+
+
+
+dim(spleen.islets)
+ADTonly <- subset(spleen.islets, features = TotalSeqC_genes)
+dim(ADTonly)
+
+noTotalSeqC_genes <- grep("-TotalSeqC$", rownames(spleen.islets), value=TRUE, invert = TRUE)
+noADT <- subset(spleen.islets, features = noTotalSeqC_genes)
+dim(noADT)
+
+
+DimPlot(spleen.islets, reduction = "umap", label=TRUE, repel=TRUE)
+
+#Normalize ADT only
+ADTonly <- SCTransform(ADTonly)
+ADTonly <- RunPCA(object = ADTonly)
+ADTonly <- RunUMAP(ADTonly, reduction = "harmony", dims = 1:30)
+ADTonly <- FindNeighbors(ADTonly, reduction = "harmony", dims = 1:30)
+ADTonly <- FindClusters(ADTonly, resolution = 0.75)
+DimPlot(ADTonly, reduction = "umap", label=TRUE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank())
+DimPlot(ADTonly, reduction = "umap", label=TRUE, repel=TRUE, group.by="dataorigin")
+
+ADTonly.cluster.0.markers <- FindMarkers(ADTonly, ident.1 = 0, min.pct = 0.25)
+ADTonly.cluster.1.markers <- FindMarkers(ADTonly, ident.1 = 1, min.pct = 0.25)
+ADTonly.cluster.2.markers <- FindMarkers(ADTonly, ident.1 = 2, min.pct = 0.25)
+ADTonly.cluster.3.markers <- FindMarkers(ADTonly, ident.1 = 3, min.pct = 0.25)
+ADTonly.cluster.4.markers <- FindMarkers(ADTonly, ident.1 = 4, min.pct = 0.25)
+ADTonly.cluster.5.markers <- FindMarkers(ADTonly, ident.1 = 5, min.pct = 0.25)
+ADTonly.cluster.6.markers <- FindMarkers(ADTonly, ident.1 = 6, min.pct = 0.25)
+ADTonly.cluster.7.markers <- FindMarkers(ADTonly, ident.1 = 7, min.pct = 0.25)
+ADTonly.cluster.8.markers <- FindMarkers(ADTonly, ident.1 = 8, min.pct = 0.25)
+ADTonly.cluster.9.markers <- FindMarkers(ADTonly, ident.1 = 9, min.pct = 0.25)
+ADTonly.cluster.10.markers <- FindMarkers(ADTonly, ident.1 = 10, min.pct = 0.25)
+ADTonly.cluster.11.markers <- FindMarkers(ADTonly, ident.1 = 11, min.pct = 0.25)
+ADTonly.cluster.12.markers <- FindMarkers(ADTonly, ident.1 = 12, min.pct = 0.25)
+ADTonly.cluster.13.markers <- FindMarkers(ADTonly, ident.1 = 13, min.pct = 0.25)
+ADTonly.cluster.14.markers <- FindMarkers(ADTonly, ident.1 = 14, min.pct = 0.25)
+
+save(ADTonly, file="ADTonly.rds")
+ 
+#cells
+# 0- CD8 T cell, 1- CD4 T cell, 2-unclear 3- CD8 T cell, 4-Moncyte/unclear?, 5-NK cell/monocyte 6-CD163+ Mono 7-CD206/CD39 MONO 
+# 8-NK/CD8 T cell 9-CD8 T cell, 10-CD206 mono 11-NK/ T cell cluster, 12- CD39 monoctye, 13- plasma cells, 14- T cells/ILCs
+
+cluster_ids <- c("CD8 T cell","CD4 T cell", "Unclear", "CD8 T cell", "Unclear", "Unclear", "Macrophage", "Macrophage", "NK cell", "CD8 T cell", "Macrophage", "Unclear", "Macrophage", "Plasma cell",  "NK cell")
+names(cluster_ids) <- levels(ADTonly)
+ADTonly.labels <- RenameIdents(ADTonly, cluster_ids)
+rm(cluster_ids)
+DimPlot(ADTonly.labels, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), 
+                                                                              axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank())+ NoLegend()
+
+
+
+
+#Normalize RNA only
+RNAonly <- SCTransform(noADT, vars.to.regress="percent.mt")
+RNAonly <- RunPCA(object = RNAonly)
+RNAonly <- RunUMAP(RNAonly, reduction = "harmony", dims = 1:30)
+RNAonly <- FindNeighbors(RNAonly, reduction = "harmony", dims = 1:30)
+RNAonly <- FindClusters(RNAonly, resolution = 0.75)
+DimPlot(RNAonly, reduction = "umap", label=TRUE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank())
+DimPlot(RNAonly, reduction = "umap", label=FALSE, repel=TRUE, group.by="dataorigin")
+
+
+RNAonly.cluster.0.markers <- FindMarkers(RNAonly, ident.1 = 0, min.pct = 0.25)
+RNAonly.cluster.1.markers <- FindMarkers(RNAonly, ident.1 = 1, min.pct = 0.25)
+RNAonly.cluster.2.markers <- FindMarkers(RNAonly, ident.1 = 2, min.pct = 0.25)
+RNAonly.cluster.3.markers <- FindMarkers(RNAonly, ident.1 = 3, min.pct = 0.25)
+RNAonly.cluster.4.markers <- FindMarkers(RNAonly, ident.1 = 4, min.pct = 0.25)
+RNAonly.cluster.5.markers <- FindMarkers(RNAonly, ident.1 = 5, min.pct = 0.25)
+RNAonly.cluster.6.markers <- FindMarkers(RNAonly, ident.1 = 6, min.pct = 0.25)
+RNAonly.cluster.7.markers <- FindMarkers(RNAonly, ident.1 = 7, min.pct = 0.25)
+RNAonly.cluster.8.markers <- FindMarkers(RNAonly, ident.1 = 8, min.pct = 0.25)
+RNAonly.cluster.9.markers <- FindMarkers(RNAonly, ident.1 = 9, min.pct = 0.25)
+RNAonly.cluster.10.markers <- FindMarkers(RNAonly, ident.1 = 10, min.pct = 0.25)
+RNAonly.cluster.11.markers <- FindMarkers(RNAonly, ident.1 = 11, min.pct = 0.25)
+RNAonly.cluster.12.markers <- FindMarkers(RNAonly, ident.1 = 12, min.pct = 0.25)
+RNAonly.cluster.13.markers <- FindMarkers(RNAonly, ident.1 = 13, min.pct = 0.25)
+RNAonly.cluster.14.markers <- FindMarkers(RNAonly, ident.1 = 14, min.pct = 0.25)
+
+save(RNAonly, file="RNAonly.rds")
+
+
+#cells
+# 0- CD8 T cell, 1- T cell, 2-B cell 3- CD8 T cell/NK cell, 4- B cell, 5-Mast cell 6-Monocyte 7-macrophage 
+# 8-NK cell/ILC 9-Unclear, 10-monocyte 11-Unclear, 12- monoctye, 13- plasma cells, 14- NK cells
+
+cluster_ids <- c("CD8 T cell","T cell", "B cell", "CD8 T/NK cell", "B cell", "Mast Cell", "Macrophage", "Macrophage", "NK cell/ILC", "Unclear", "Macrophage", "Unclear", "Macrophage", "Plasma cell",  "NK cell")
+names(cluster_ids) <- levels(RNAonly)
+RNAonly.labels <- RenameIdents(RNAonly, cluster_ids)
+rm(cluster_ids)
+DimPlot(RNAonly.labels, reduction = "umap", label=FALSE, repel=TRUE)  + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), 
+ 
