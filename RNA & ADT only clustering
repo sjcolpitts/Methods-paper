@@ -1,58 +1,31 @@
-# First, install and load the limma package
-install.packages("limma")
-BiocManager::install(("edgeR"), force = TRUE)
-library(limma)
-library(edgeR)
+
+# create heatmap with both RNA and ADT 
+spleen.islet.markers <- c("CD103-TotalSeqC","ITGB7-TotalSeqC","CD49a-TotalSeqC","CD8a-TotalSeqC",
+"PD1-TotalSeqC","CD45-TotalSeqC","ICOS-TotalSeqC","CD73-TotalSeqC","CD127-TotalSeqC","CCL5","CD94-TotalSeqC",
+"NKG2D-TotalSeqC","CD3-TotalSeqC","Fas-TotalSeqC","TNFAIP3","CD4-TotalSeqC",
+"CD28-TotalSeqC","CD45RO-TotalSeqC","IL7R","CD57-TotalSeqC","IL32","CD3E","CCR4-TotalSeqC","CD79A","MS4A1","LTB",
+"CD74","HLA-DQA1","CD19","GZMK","JUN","GZMA","NKG7","CD8A","EGR1","CD3D","KLRD1",
+"CD52","HLA-DRA","CD117-TotalSeqC","TPSB2","TPSAB1","NKp44-TotalSeqC","VIM","GATA2",
+"S100A8","CST3","LYZ","SAT1","FTL","CD11b-TotalSeqC","LST1",
+"FCER1G","FCN1","IL1B","CXCL8","CCL4","APOE","CD206-TotalSeqC","CD39-TotalSeqC",
+"CD56-TotalSeqC","XCL1","CD45RA-TotalSeqC","CD7","XCL2","FOS","NKp46-TotalSeqC","IL2RB",
+"CD161-TotalSeqC","IL2RB-TotalSeqC","CD38-TotalSeqC","C1QB","CD5L","CD163-TotalSeqC",
+"CD138-TotalSeqC","CX3CR1-TotalSeqC","CXCR3-TotalSeqC","CD86-TotalSeqC","CD69-TotalSeqC","HLADR-TotalSeqC",
+"CD32-TotalSeqC","CD64-TotalSeqC",
+"CD16-TotalSeqC","IGKV4-1","IGKC","JCHAIN","GNLY","TCRab-TotalSeqC","PRF1","GZMB","PTGDS","FCGR3A")
 
 
-#make matric object
-matrix_object <- as.matrix(spleen.islets@assays$SCT@data)
-write.csv (matrix_object, file ="matrix.object.csv")
-
-
-# Next, load your RNA data into a Matrix object
-rnaseq_data <- read.csv("matrix.object.csv", row.names = 1)
-rnaseq_matrix <- as.matrix(rnaseq_data)
-
-# Then, create a vector of ADT-tagged genes
-TotalSeqC_genes <- grep("TotalSeqC", rnaseq_data)
-
-print(TotalSeqC_genes)
-
-# Use the filterByExpr function to remove ADT-tagged signals from the data
-filtered_rnaseq_matrix <- filterByExpr(matrix_object, TotalSeqC_genes)
-
-# The filtered matrix will now contain only the non-ADT-tagged genes
-
-## something else 
-
-#make matric object
-matrix_object <- as.matrix(spleen.islets@assays$SCT@data)
-write.csv (matrix_object, file ="matrix.object.csv")
-
-
-# Next, load your RNA data into a Matrix object
-rnaseq_data <- read.csv("matrix.object.csv", row.names = 1)
-
-## find in data frame 
-rows_to_remove <- grep("TotalSeqC$", rownames(rnaseq_data))
-
-rnaseq_minusADT <- rnaseq_data[-rows_to_remove, ]
-
-spleen.islets.no.ADT <- CreateSeuratObject(counts = rnaseq_minusADT)
+DoHeatmap(object = spleen.islets.labels,
+          features = spleen.islet.markers,
+          size = 3, 
+          disp.max = NULL, disp.min = -1.5)+ 
+  scale_fill_gradient2( low = rev(c('#d1e5f0','#67a9cf','#2166ac')), 
+                        mid = "white", high = rev(c('#FF7518','#FFA500','#FFD580')), 
+                        midpoint = 0, guide = "colourbar", aesthetics = "fill")
 
 
 
-#create seurat object minus ADT signal 
-spleen.islets.no.ADT <- CreateSeuratObject(counts = rnaseq_minusADT)
-
-
-
-
-
-
-#new method 
-MTgenes <- (grep(“MT-“, rownames(T19), value = TRUE)))
+# make objects with only RNA or ADT
 
 TotalSeqC_genes <- grep("-TotalSeqC$", rownames(spleen.islets), value=TRUE)
 spleen.islet.noADT <- subset(spleen.islets, features = TotalSeqC_genes, invert = TRUE)
@@ -98,9 +71,7 @@ ADTonly.cluster.14.markers <- FindMarkers(ADTonly, ident.1 = 14, min.pct = 0.25)
 
 save(ADTonly, file="ADTonly.rds")
  
-#cells
-# 0- CD8 T cell, 1- CD4 T cell, 2-unclear 3- CD8 T cell, 4-Moncyte/unclear?, 5-NK cell/monocyte 6-CD163+ Mono 7-CD206/CD39 MONO 
-# 8-NK/CD8 T cell 9-CD8 T cell, 10-CD206 mono 11-NK/ T cell cluster, 12- CD39 monoctye, 13- plasma cells, 14- T cells/ILCs
+#cells labels
 
 cluster_ids <- c("CD8 T cell","CD4 T cell", "Unclear", "CD8 T cell", "Unclear", "Unclear", "Macrophage", "Macrophage", "NK cell", "CD8 T cell", "Macrophage", "Unclear", "Macrophage", "Plasma cell",  "NK cell")
 names(cluster_ids) <- levels(ADTonly)
@@ -109,6 +80,28 @@ rm(cluster_ids)
 DimPlot(ADTonly.labels, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), 
                                                                               axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank())+ NoLegend()
 
+#HEATMAP WITH ADT ONLY MARKERS 
+DoHeatmap(object = ADTonly.labels,
+          features = c("CD103-TotalSeqC", "ITGB7-TotalSeqC", 
+                       "CD49a-TotalSeqC","CD8a-TotalSeqC","PD1-TotalSeqC",
+                       "CD45-TotalSeqC","CD127-TotalSeqC","ICOS-TotalSeqC", 
+                       "CD94-TotalSeqC", "NKG2D-TotalSeqC", "CD3-TotalSeqC",
+                       "CD4-TotalSeqC", "CD28-TotalSeqC", "CD45RO-TotalSeqC",
+                       "Fas-TotalSeqC", "CD57-TotalSeqC", "CCR4-TotalSeqC", "CXCR4-TotalSeqC",
+                       "CD161-TotalSeqC", "CD40-TotalSeqC", "CD45RA-TotalSeqC", "CD27-TotalSeqC",
+                       "CD73-TotalSeqC", "HLADR-TotalSeqC", "CXCR3-TotalSeqC", "CX3CR1-TotalSeqC",
+                       "CD86-TotalSeqC", "CD25-TotalSeqC", "CD39-TotalSeqC", "CD69-TotalSeqC",
+                       "PDL1-TotalSeqC","LAG3-TotalSeqC","CD32-TotalSeqC","CD137-TotalSeqC",
+                       "NKp46-TotalSeqC","CD117-TotalSeqC","TIM3-TotalSeqC","KLRG1-TotalSeqC",
+                       "CD80-TotalSeqC", "CD120b-TotalSeqC","TSLPR-TotalSeqC","OX40-TotalSeqC",
+                       "CD206-TotalSeqC","CD64-TotalSeqC","GITR-TotalSeqC","CD163-TotalSeqC",
+                       "CD137L-TotalSeqC","CRTh2-TotalSeqC","CD11b-TotalSeqC","CD56-TotalSeqC",
+                       "IL2RB-TotalSeqC","CD127-TotalSeqC","CD16-TotalSeqC","CD38-TotalSeqC"),
+          size = 3, 
+          disp.max = NULL, disp.min = -1.5)+ 
+  scale_fill_gradient2( low = rev(c('#d1e5f0','#67a9cf','#2166ac')), 
+                        mid = "white", high = rev(c('#FF7518','#FFA500','#FFD580')), 
+                        midpoint = 0, guide = "colourbar", aesthetics = "fill")
 
 
 
@@ -141,9 +134,7 @@ RNAonly.cluster.14.markers <- FindMarkers(RNAonly, ident.1 = 14, min.pct = 0.25)
 save(RNAonly, file="RNAonly.rds")
 
 
-#cells
-# 0- CD8 T cell, 1- T cell, 2-B cell 3- CD8 T cell/NK cell, 4- B cell, 5-Mast cell 6-Monocyte 7-macrophage 
-# 8-NK cell/ILC 9-Unclear, 10-monocyte 11-Unclear, 12- monoctye, 13- plasma cells, 14- NK cells
+#cell labels 
 
 cluster_ids <- c("CD8 T cell","T cell", "B cell", "CD8 T/NK cell", "B cell", "Mast Cell", "Macrophage", "Macrophage", "NK cell/ILC", "Unclear", "Macrophage", "Unclear", "Macrophage", "Plasma cell",  "NK cell")
 names(cluster_ids) <- levels(RNAonly)
@@ -151,3 +142,22 @@ RNAonly.labels <- RenameIdents(RNAonly, cluster_ids)
 rm(cluster_ids)
 DimPlot(RNAonly.labels, reduction = "umap", label=FALSE, repel=TRUE)  + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), 
  
+ #Heatmap with RNA only markers 
+DoHeatmap(object = RNAonly.labels,
+          features = c("CCL5","IFIT2","TNFAIP3","H1FX",
+                       "OASL","IL7R","IL32","CD3E","FOS","EGR1","CXCR4","KLRB1","CD3D",
+                       "JUNB","CD79A","LTB","CD74","CD19","HLA-DQA1","CD22","GZMK","GZMA",
+                       "NKG7","CD8A","KLRD1","IER2","CD37","CD52", 
+                       "CD79B","HLA-DRA","IGHD","FCER2","TPSB2","TPSAB1","VIM","GATA2",
+                       "TPSD1","AREG","S100A8","CST3","LYZ","FTL","LST1","FCN1",
+                       "FCER1G","IL1B","CCL3","CXCL8","SOD2","CCL4","APOE","CCL4L2","C1QA",
+                       "CCL3L1","GPR183","HLA-DRB1","SPP1",
+"HLA-DPB1","CD83","XCL1","CD7","XCL2","IL2RB","CD69","DUSP1","JUN","KLRF1",
+"KLRC1","C1QB","CD5L",
+"CD68","GLUL","FCGRT","NEAT1","KLF6","IGKV4-1","IGKC","IGHG1","IGHA1",
+"JCHAIN","IGHG3","GNLY","PRF1","GZMB","PTGDS","FGFBP2","SPON2","CD247","FCGR3A"),
+size = 3, 
+disp.max = NULL, disp.min = -1.5)+ 
+  scale_fill_gradient2( low = rev(c('#d1e5f0','#67a9cf','#2166ac')), 
+                        mid = "white", high = rev(c('#FF7518','#FFA500','#FFD580')), 
+                        midpoint = 0, guide = "colourbar", aesthetics = "fill")
