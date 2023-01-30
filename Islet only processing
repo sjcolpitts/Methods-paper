@@ -1,0 +1,253 @@
+# SECTION 1 
+# Working with total CD45 pancreas 
+#load in and QC CD45-enriched islets (Labelled Islets.total) ------------------------------------------
+matrix_dir = "R405_pancreas_CD45/outs/filtered_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path, header = FALSE, stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path, header = FALSE, stringsAsFactors = FALSE)
+colnames (mat) = barcode.names$V1
+rownames (mat) = feature.names$V2
+Islets.total  <- CreateSeuratObject(mat)
+rm(mat)
+
+#look at mitrochrondrial genes, features and counts  ------------------------------------------
+Islets.total[["percent.mt"]] <- PercentageFeatureSet(Islets.total, pattern = "^MT-")
+VlnPlot(Islets.total, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+# Decide cutoffs for data
+Islets.total <- subset(Islets.total, subset = nFeature_RNA > 0 & percent.mt < 75)
+
+
+## Normalize with SCTransform ------------------------------------------
+Islets.total <- SCTransform(Islets.total)
+Islets.total <- RunPCA(Islets.total)
+Islets.total <- RunUMAP(Islets.total, dims = 1:30)
+Islets.total <- FindNeighbors(Islets.total, dims = 1:30)
+Islets.total <- FindClusters(Islets.total, resolution = 0.5)
+
+save(Islets.total, file = "Pancreas.total.rds")
+
+
+DimPlot(Islets.total, reduction = "umap", label=TRUE, repel=TRUE)
+FeaturePlot(Islets.total, features = "PTPRC")
+FeaturePlot(Islets.total, features = "CD45-TotalSeqC")
+VlnPlot(Islets.total, features = "PTPRC")
+
+
+#Cluster and Find Markers  ------------------------------------------
+total.pan.cluster0.markers <- FindMarkers(Islets.total, ident.1 = 0, min.pct = 0.25)
+total.pan.cluster1.markers <- FindMarkers(Islets.total, ident.1 = 1, min.pct = 0.25)
+total.pan.cluster2.markers <- FindMarkers(Islets.total, ident.1 = 2, min.pct = 0.25)
+total.pan.cluster3.markers <- FindMarkers(Islets.total, ident.1 = 3, min.pct = 0.25)
+total.pan.cluster4.markers <- FindMarkers(Islets.total, ident.1 = 4, min.pct = 0.25)
+total.pan.cluster5.markers <- FindMarkers(Islets.total, ident.1 = 5, min.pct = 0.25)
+total.pan.cluster6.markers <- FindMarkers(Islets.total, ident.1 = 6, min.pct = 0.25)
+total.pan.cluster7.markers <- FindMarkers(Islets.total, ident.1 = 7, min.pct = 0.25)
+total.pan.cluster8.markers <- FindMarkers(Islets.total, ident.1 = 8, min.pct = 0.25)
+total.pan.cluster9.markers <- FindMarkers(Islets.total, ident.1 = 9, min.pct = 0.25)
+total.pan.cluster10.markers <- FindMarkers(Islets.total, ident.1 = 10, min.pct = 0.25)
+total.pan.cluster11.markers <- FindMarkers(Islets.total, ident.1 = 11, min.pct = 0.25)
+total.pan.cluster12.markers <- FindMarkers(Islets.total, ident.1 = 12, min.pct = 0.25)
+total.pan.cluster13.markers <- FindMarkers(Islets.total, ident.1 = 13, min.pct = 0.25)
+total.pan.cluster14.markers <- FindMarkers(Islets.total, ident.1 = 14, min.pct = 0.25)
+total.pan.cluster15.markers <- FindMarkers(Islets.total, ident.1 = 15, min.pct = 0.25)
+total.pan.cluster16.markers <- FindMarkers(Islets.total, ident.1 = 16, min.pct = 0.25)
+total.pan.cluster17.markers <- FindMarkers(Islets.total, ident.1 = 17, min.pct = 0.25)
+total.pan.cluster18.markers <- FindMarkers(Islets.total, ident.1 = 18, min.pct = 0.25)
+total.pan.cluster19.markers <- FindMarkers(Islets.total, ident.1 = 19, min.pct = 0.25)
+total.pan.cluster20.markers <- FindMarkers(Islets.total, ident.1 = 20, min.pct = 0.25)
+total.pan.cluster21.markers <- FindMarkers(Islets.total, ident.1 = 21, min.pct = 0.25)
+total.pan.cluster22.markers <- FindMarkers(Islets.total, ident.1 = 22, min.pct = 0.25)
+total.pan.cluster23.markers <- FindMarkers(Islets.total, ident.1 = 23, min.pct = 0.25)
+
+#version 1 labeling of clusters
+cluster_ids <- c("Acinar 1", "Alpha cell", "clust 2", "Epthilial 1", "Beta cell 1", "Mast cells", "T/ILCs", "Monocytes", "Endothelial", "Acinar 2", "Monocyte 2", "Endothelial 2", "Acinar 3", "Epithelial", "Gamma/Delta Cells", "Acinar", "Enterocytes", "?", "Neutrophils", "?", "Beta cell 2", "Beta Cell 3", "?", "?")
+names(cluster_ids) <- levels(Islets.total)
+Islets.total.labels <- RenameIdents(Islets.total, cluster_ids)
+rm(cluster_ids)
+DimPlot(Islets.total.labels, reduction = "umap", label=TRUE, repel=TRUE)
+
+#version 2 labeling of clusters
+cluster_ids <- c("Acinar", "Alpha cell", "Acinar", "Epithelial", "Beta Cell", "Mast cell", "T/ILC", "Monocyte", "Endothelial", "Acinar", "Monocyte", "Muscle Cell", "Acinar", "Epithelial", "Gamma/Delta Cell", "Acinar", "Enterocytes", "Acinar", "Neutrophil", "Acinar", "Epithelial", "Beta Cell", "Beta Cell", "Beta Cell")
+names(cluster_ids) <- levels(Islets.total)
+Islets.total.labels <- RenameIdents(Islets.total, cluster_ids)
+rm(cluster_ids)
+DimPlot(Islets.total.labels, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(Islets.total.labels, reduction = "umap", label=FALSE, repel=TRUE)
+
+# Subset out immune cells  ------------------------------------------
+
+Total.Islet.Immune <- subset(Islets.total, subset = seurat_clusters == 6|seurat_clusters == 11|seurat_clusters == 5)
+
+#look at mitochondrial and features of RNA  ------------------------------------------
+Total.Islet.Immune[["percent.mt"]] <- PercentageFeatureSet(Total.Islet.Immune, pattern = "^MT-")
+VlnPlot(Total.Islet.Immune, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+Total.Islet.Immune <- subset(Total.Islet.Immune, subset = nFeature_RNA > 10 & percent.mt < 10)
+
+# recluster & transform immune cells  ------------------------------------------
+Total.Islet.Immune <- SCTransform(Total.Islet.Immune)
+Total.Islet.Immune <- RunPCA(Total.Islet.Immune)
+Total.Islet.Immune <- RunUMAP(Total.Islet.Immune, dims = 1:30)
+Total.Islet.Immune <- FindNeighbors(Total.Islet.Immune, dims = 1:30)
+Total.Islet.Immune <- FindClusters(Total.Islet.Immune, resolution = 0.5)
+
+## alternate code for reclustering 
+Total.Islet.Immune <- NormalizeData(Total.Islet.Immune)
+Total.Islet.Immune <- FindVariableFeatures(Total.Islet.Immune, selection.method = "vst", nfeatures = 2000)
+Total.Islet.Immune <- ScaleData(Total.Islet.Immune)
+Total.Islet.Immune <- RunPCA(Total.Islet.Immune, features = VariableFeatures(object = Total.Islet.Immune))
+Total.Islet.Immune <- RunUMAP(Total.Islet.Immune, dims = 1:30)
+Total.Islet.Immune <- FindNeighbors(Total.Islet.Immune, dims = 1:30)
+Total.Islet.Immune <- FindClusters(Total.Islet.Immune, resolution = 0.5)
+
+# Visualize data  ------------------------------------------
+DimPlot(Total.Islet.Immune, reduction = "umap", label=TRUE, repel=TRUE)
+save(Total.Islet.Immune, file = "Pancreas.total.immune.rds")
+FeaturePlot(Total.Islet.Immune, order = TRUE, features = "IL7R")
+FeaturePlot(Total.Islet.Immune, order = TRUE, features = "CD64-TotalSeqC") 
+FeaturePlot(Total.Islet.Immune, order = TRUE, features = "CD3-TotalSeqC")
+FeaturePlot(Total.Islet.Immune, order = TRUE, features = "CD3E") 
+
+#Find immune markers and label------------------------------------------
+islet.immune.cluster0.markers <- FindMarkers(Total.Islet.Immune, ident.1 = 0, min.pct = 0.25)
+islet.immune.cluster1.markers <- FindMarkers(Total.Islet.Immune, ident.1 = 1, min.pct = 0.25)
+islet.immune.cluster2.markers <- FindMarkers(Total.Islet.Immune, ident.1 = 2, min.pct = 0.25)
+islet.immune.cluster3.markers <- FindMarkers(Total.Islet.Immune, ident.1 = 3, min.pct = 0.25)
+islet.immune.cluster4.markers <- FindMarkers(Total.Islet.Immune, ident.1 = 4, min.pct = 0.25)
+islet.immune.cluster5.markers <- FindMarkers(Total.Islet.Immune, ident.1 = 5, min.pct = 0.25)
+
+
+cluster_ids <- c("T cell", "Mast cell", "Myleoid", "Mast cell", "Myleoid", "T cell/ILC")
+names(cluster_ids) <- levels(Total.Islet.Immune)
+Total.Islet.Immune.labels <- RenameIdents(Total.Islet.Immune, cluster_ids)
+rm(cluster_ids)
+DimPlot(Total.Islet.Immune.labels, reduction = "umap", label=FALSE, repel=TRUE)
+
+
+
+
+
+
+#SECTION 2 ---------------------------------------------------------
+#load in and QC sorted pancreas 
+
+matrix_dir = "R405_pancreas_sort/outs/filtered_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path, header = FALSE, stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path, header = FALSE, stringsAsFactors = FALSE)
+colnames (mat) = barcode.names$V1
+rownames (mat) = feature.names$V2
+Islets.sorted  <- CreateSeuratObject(mat)
+rm(mat)
+
+## QC FOR DATA ---------------------------------------------------------
+Islets.sorted[["percent.mt"]] <- PercentageFeatureSet(Islets.sorted, pattern = "^MT-")
+VlnPlot(Islets.sorted, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+Islets.sorted <- subset(Islets.sorted, subset = nFeature_RNA > 0 & percent.mt < 25)
+
+Islets.sorted <- SCTransform(Islets.sorted, vars.to.regress="percent.mt")
+Islets.sorted <- RunPCA(Islets.sorted)
+Islets.sorted <- RunUMAP(Islets.sorted, dims = 1:30)
+Islets.sorted <- FindNeighbors(Islets.sorted, dims = 1:30)
+Islets.sorted <- FindClusters(Islets.sorted, resolution = 0.5)
+DimPlot(Islets.sorted, reduction = "umap", label=TRUE, repel=TRUE)
+FeaturePlot(Islets.sorted, features = "CD3-TotalSeqC")
+FeaturePlot(Islets.sorted, features = "PTPRC")
+FeaturePlot(Islets.sorted, features = "CD127-TotalSeqC")
+FeaturePlot(Islets.sorted, features = "CD45-TotalSeqC")
+VlnPlot(Islets.sorted, features = "PTPRC")
+save(Islets.sorted, file = "Sorted.Pancreas.total.rds")
+
+sorted.islet.cluster0.markers <- FindMarkers(Islets.sorted, ident.1 = 0, min.pct = 0.25)
+sorted.islet.cluster1.markers <- FindMarkers(Islets.sorted, ident.1 = 1, min.pct = 0.25)
+sorted.islet.cluster2.markers <- FindMarkers(Islets.sorted, ident.1 = 2, min.pct = 0.25)
+sorted.islet.cluster3.markers <- FindMarkers(Islets.sorted, ident.1 = 3, min.pct = 0.25)
+sorted.islet.cluster4.markers <- FindMarkers(Islets.sorted, ident.1 = 4, min.pct = 0.25)
+sorted.islet.cluster5.markers <- FindMarkers(Islets.sorted, ident.1 = 5, min.pct = 0.25)
+sorted.islet.cluster6.markers <- FindMarkers(Islets.sorted, ident.1 = 6, min.pct = 0.25)
+sorted.islet.cluster7.markers <- FindMarkers(Islets.sorted, ident.1 = 7, min.pct = 0.25)
+sorted.islet.cluster8.markers <- FindMarkers(Islets.sorted, ident.1 = 8, min.pct = 0.25)
+sorted.islet.cluster9.markers <- FindMarkers(Islets.sorted, ident.1 = 9, min.pct = 0.25)
+
+cluster_ids <- c("Naive T cell", "Senescent CD4 T cell", "CD8 T cell", "Naive NK cell", "Monocytes", "CD4 T cell", "Mast Cell",  "Beta Cell",  "Acinar")
+names(cluster_ids) <- levels(Islets.sorted)
+Islets.sorted.labels <- RenameIdents(Islets.sorted, cluster_ids)
+rm(cluster_ids)
+DimPlot(Islets.sorted.labels, reduction = "umap", label=TRUE, repel=TRUE)
+
+# Subset immune cells 
+
+Islet.Sort.Immune <- subset(Islets.sorted, subset = seurat_clusters == 0|seurat_clusters == 1|seurat_clusters == 2|seurat_clusters == 3|seurat_clusters == 4|seurat_clusters == 5|seurat_clusters == 6)
+Islet.Sort.Immune <- SCTransform(Islet.Sort.Immune)
+Islet.Sort.Immune <- RunPCA(Islet.Sort.Immune)
+Islet.Sort.Immune <- RunUMAP(Islet.Sort.Immune, dims = 1:30)
+Islet.Sort.Immune <- FindNeighbors(Islet.Sort.Immune, dims = 1:30)
+Islet.Sort.Immune <- FindClusters(Islet.Sort.Immune, resolution = 0.5)
+DimPlot(Islet.Sort.Immune, reduction = "umap", label=TRUE, repel=TRUE)
+save(Islet.Sort.Immune, file = "Sorted.Pancreas.immune.rds")
+
+#Find markers 
+sorted.islet.immune.cluster0.markers <- FindMarkers(Islet.Sort.Immune, ident.1 = 0, min.pct = 0.25)
+sorted.islet.immune.cluster1.markers <- FindMarkers(Islet.Sort.Immune, ident.1 = 1, min.pct = 0.25)
+sorted.islet.immune.cluster2.markers <- FindMarkers(Islet.Sort.Immune, ident.1 = 2, min.pct = 0.25)
+sorted.islet.immune.cluster3.markers <- FindMarkers(Islet.Sort.Immune, ident.1 = 3, min.pct = 0.25)
+sorted.islet.immune.cluster4.markers <- FindMarkers(Islet.Sort.Immune, ident.1 = 4, min.pct = 0.25)
+sorted.islet.immune.cluster5.markers <- FindMarkers(Islet.Sort.Immune, ident.1 = 5, min.pct = 0.25)
+sorted.islet.immune.cluster6.markers <- FindMarkers(Islet.Sort.Immune, ident.1 = 6, min.pct = 0.25)
+
+# label
+cluster_ids <- c("T helper cells", "NK cell/ C8 T cell", "Naive NK cell", "Myleoid", "Helper ILC", "Helper ILC",  "Mast Cell")
+names(cluster_ids) <- levels(Islet.Sort.Immune)
+Islet.Sort.Immune.labels <- RenameIdents(Islet.Sort.Immune, cluster_ids)
+rm(cluster_ids)
+DimPlot(Islet.Sort.Immune.labels, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(Islet.Sort.Immune.labels, reduction = "umap", label=FALSE, repel=TRUE)
+
+
+
+#SECTION 3 ---------------------------------------------------------
+# MergING sorted and CD45 enriched islets immune cells 
+Islet.Sort.Immune$dataorigin <- "Sorted"
+Total.Islet.Immune$dataorigin <- "Not Sorted"
+Merged_Pancreas <- merge(x = Islet.Sort.Immune, y = Total.Islet.Immune)
+Merged_Pancreas <- SCTransform(Merged_Pancreas)
+Merged_Pancreas <- RunPCA(object = Merged_Pancreas)
+Merged_Pancreas <- RunHarmony(Merged_Pancreas, "dataorigin", plot_convergence = TRUE,assay.use="SCT")
+Merged_Pancreas <- RunUMAP(Merged_Pancreas, reduction = "harmony",dims = 1:30)
+Merged_Pancreas <- FindNeighbors(Merged_Pancreas, reduction = "harmony",dims = 1:30)
+Merged_Pancreas <- FindClusters(Merged_Pancreas, resolution = 0.5)
+DimPlot(Merged_Pancreas, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(Merged_Pancreas, reduction = "umap", label=FALSE, repel=TRUE, group.by="dataorigin")
+save(Merged_Pancreas, file = "Merged.Pancreas.rds")
+
+#Find markers within clusters 
+merged.cluster0.markers <- FindMarkers(Merged_Pancreas, ident.1 = 0, min.pct = 0.25)
+merged.cluster1.markers <- FindMarkers(Merged_Pancreas, ident.1 = 1, min.pct = 0.25)
+merged.cluster2.markers <- FindMarkers(Merged_Pancreas, ident.1 = 2, min.pct = 0.25)
+merged.cluster3.markers <- FindMarkers(Merged_Pancreas, ident.1 = 3, min.pct = 0.25)
+merged.cluster4.markers <- FindMarkers(Merged_Pancreas, ident.1 = 4, min.pct = 0.25)
+merged.cluster5.markers <- FindMarkers(Merged_Pancreas, ident.1 = 5, min.pct = 0.25)
+merged.cluster6.markers <- FindMarkers(Merged_Pancreas, ident.1 = 6, min.pct = 0.25)
+merged.cluster7.markers <- FindMarkers(Merged_Pancreas, ident.1 = 7, min.pct = 0.25)
+merged.cluster8.markers <- FindMarkers(Merged_Pancreas, ident.1 = 8, min.pct = 0.25)
+merged.cluster9.markers <- FindMarkers(Merged_Pancreas, ident.1 = 9, min.pct = 0.25)
+merged.cluster10.markers <- FindMarkers(Merged_Pancreas, ident.1 = 10, min.pct = 0.25)
+merged.cluster11.markers <- FindMarkers(Merged_Pancreas, ident.1 = 11, min.pct = 0.25)
+
+#Subset set out again immune cells (some exocrine/endocrine cells snuck in)
+Merged.Immune <- subset(Merged_Pancreas, subset = seurat_clusters == 4| seurat_clusters == 3| seurat_clusters == 5| seurat_clusters == 6| seurat_clusters == 0| seurat_clusters == 1| seurat_clusters == 2)
+Merged.Immune <- SCTransform(Merged.Immune, vars.to.regress="percent.mt")
+Merged.Immune <- RunPCA(Merged.Immune)
+Merged.Immune <- RunHarmony(Merged.Immune, "dataorigin", plot_convergence = TRUE,assay.use="SCT")
+Merged.Immune <- RunUMAP(Merged.Immune, reduction = "harmony",dims = 1:30)
+Merged.Immune <- FindNeighbors(Merged.Immune, reduction = "harmony",dims = 1:30)
+Merged.Immune <- FindClusters(Merged.Immune, resolution = 0.75)
+DimPlot(Merged.Immune, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(Merged.Immune, reduction = "umap", label=TRUE, repel=TRUE, group.by="dataorigin")
+
+save(Merged.Immune, file = "Merged.Pancreas.Immune.rds") 
