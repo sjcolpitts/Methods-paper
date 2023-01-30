@@ -1,0 +1,111 @@
+## STEP 1: LOAD IN DATA 
+
+matrix_dir = "Islet:spleen:lymphnode/R405_spleen/outs/filtered_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path, header = FALSE, stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path, header = FALSE, stringsAsFactors = FALSE)
+colnames (mat) = barcode.names$V1
+rownames (mat) = feature.names$V2
+spleen  <- CreateSeuratObject(mat)
+rm(mat)
+
+## STEP 2: QC FOR DATA ---------------------------------------------------------
+spleen[["percent.mt"]] <- PercentageFeatureSet(spleen, pattern = "^MT-")
+VlnPlot(spleen, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+spleen <- subset(spleen, subset = nFeature_RNA > 0 & percent.mt < 20)
+
+## STEP 3: Normalize with SCTransform ------------------------------------------
+spleen <- SCTransform(spleen, vars.to.regress="percent.mt")
+spleen <- RunPCA(spleen)
+spleen <- RunUMAP(spleen, dims = 1:30)
+spleen <- FindNeighbors(spleen, dims = 1:30)
+spleen <- FindClusters(spleen, resolution = 0.5)
+DimPlot(spleen, reduction = "umap", label=TRUE, repel=TRUE)
+
+save(spleen, file = "Spleen.rds")
+
+FeaturePlot(spleen, features = "CD3-TotalSeqC")
+FeaturePlot(spleen, features = "PTPRC")
+FeaturePlot(spleen, features = "CD45-TotalSeqC")
+VlnPlot(spleen, features = "PTPRC")
+VlnPlot(spleen, features = "CD45-TotalSeqC")
+
+spleencluster0.markers <- FindMarkers(spleen, ident.1 = 0, min.pct = 0.25)
+spleen.cluster.1.markers <- FindMarkers(spleen, ident.1 = 1, min.pct = 0.25)
+spleen.cluster.2.markers <- FindMarkers(spleen, ident.1 = 2, min.pct = 0.25)
+spleen.cluster.3.markers <- FindMarkers(spleen, ident.1 = 3, min.pct = 0.25)
+spleen.cluster.4.markers <- FindMarkers(spleen, ident.1 = 4, min.pct = 0.25)
+spleen.cluster.5.markers <- FindMarkers(spleen, ident.1 = 5, min.pct = 0.25)
+spleen.cluster.6.markers <- FindMarkers(spleen, ident.1 = 6, min.pct = 0.25)
+spleen.cluster.7.markers <- FindMarkers(spleen, ident.1 = 7, min.pct = 0.25)
+spleen.cluster.8.markers <- FindMarkers(spleen, ident.1 = 8, min.pct = 0.25)
+spleen.cluster.9.markers <- FindMarkers(spleen, ident.1 = 9, min.pct = 0.25)
+spleen.cluster.10.markers <- FindMarkers(spleen, ident.1 = 10, min.pct = 0.25)
+spleen.cluster.11.markers <- FindMarkers(spleen, ident.1 = 11, min.pct = 0.25)
+spleen.cluster.12.markers <- FindMarkers(spleen, ident.1 = 12, min.pct = 0.25)
+spleen.cluster.13.markers <- FindMarkers(spleen, ident.1 = 13, min.pct = 0.25)
+spleen.cluster.14.markers <- FindMarkers(spleen, ident.1 = 14, min.pct = 0.25)
+spleen.cluster.15.markers <- FindMarkers(spleen, ident.1 = 15, min.pct = 0.25)
+
+#option 1
+cluster_ids <- c("B cell 1", "Myeloid 1", "CD8 T cell 1", "CD4 T cell 3", "CD4 T cell", "B Cell 2",  "CD4 T cell 2",  "Myleoid 2", "CD8 T cell 2", "Plasma B cell", "NK cell 1", "B cell 2", "CD8 T cell 3", "NK cell 2", "ILC3", "Plasma B cell")
+names(cluster_ids) <- levels(spleen)
+spleen.labels <- RenameIdents(spleen, cluster_ids)
+rm(cluster_ids)
+DimPlot(spleen.labels, reduction = "umap", label=TRUE, repel=TRUE)
+
+#option 2
+cluster_ids <- c("B cell", "Myeloid", "CD8 T cell", "CD4 T cell", "CD4 T cell", "B cell",  "CD4 T cell",  "Myeloid", "CD8 T cell", "Plasma B cell", "NK cell", "B cell", "CD8 T cell", "NK cell", "ILC3", "Plasma B cell")
+names(cluster_ids) <- levels(spleen)
+spleen.labels <- RenameIdents(spleen, cluster_ids)
+rm(cluster_ids)
+DimPlot(spleen.labels, reduction = "umap", label=FALSE, repel=TRUE)
+
+#Subset out immune cells only and transform
+spleen.immune <- subset(spleen, subset = seurat_clusters == 0|seurat_clusters == 1|seurat_clusters == 3|seurat_clusters == 4|seurat_clusters == 6|seurat_clusters == 7|seurat_clusters == 8|seurat_clusters == 9|seurat_clusters == 10 |seurat_clusters == 11 |seurat_clusters == 12 |seurat_clusters == 13)
+spleen.immune <- SCTransform(spleen.immune)
+spleen.immune <- RunPCA(spleen.immune)
+spleen.immune <- RunUMAP(spleen.immune, dims = 1:30)
+spleen.immune <- FindNeighbors(spleen.immune, dims = 1:30)
+spleen.immune <- FindClusters(spleen.immune, resolution = 0.5)
+DimPlot(spleen.immune, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(spleen.immune, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) + NoLegend()
+
+save(spleen.immune, file = "Spleen.Immune.rds")
+
+FeaturePlot(spleen.immune, features = "PTPRC")
+FeaturePlot(spleen.immune, features = "CD45-TotalSeqC")
+VlnPlot(spleen.immune, features = "PTPRC")
+VlnPlot(spleen.immune, features = "CD45-TotalSeqC")
+
+
+spleenimmunecluster0.markers <- FindMarkers(spleen.immune, ident.1 = 0, min.pct = 0.25)
+spleenimmunecluster1.markers <- FindMarkers(spleen.immune, ident.1 = 1, min.pct = 0.25)
+spleenimmunecluster2.markers <- FindMarkers(spleen.immune, ident.1 = 2, min.pct = 0.25)
+spleenimmunecluster3.markers <- FindMarkers(spleen.immune, ident.1 = 3, min.pct = 0.25)
+spleenimmunecluster4.markers <- FindMarkers(spleen.immune, ident.1 = 4, min.pct = 0.25)
+spleenimmunecluster5.markers <- FindMarkers(spleen.immune, ident.1 = 5, min.pct = 0.25)
+spleenimmunecluster6.markers <- FindMarkers(spleen.immune, ident.1 = 6, min.pct = 0.25)
+spleenimmunecluster7.markers <- FindMarkers(spleen.immune, ident.1 = 7, min.pct = 0.25)
+spleenimmunecluster8.markers <- FindMarkers(spleen.immune, ident.1 = 8, min.pct = 0.25)
+spleenimmunecluster9.markers <- FindMarkers(spleen.immune, ident.1 = 9, min.pct = 0.25)
+spleenimmunecluster10.markers <- FindMarkers(spleen.immune, ident.1 = 10, min.pct = 0.25)
+spleenimmunecluster11.markers <- FindMarkers(spleen.immune, ident.1 = 11, min.pct = 0.25)
+spleenimmunecluster12.markers <- FindMarkers(spleen.immune, ident.1 = 12, min.pct = 0.25)
+spleenimmunecluster13.markers <- FindMarkers(spleen.immune, ident.1 = 13, min.pct = 0.25)
+spleenimmunecluster14.markers <- FindMarkers(spleen.immune, ident.1 = 14, min.pct = 0.25)
+spleenimmunecluster15.markers <- FindMarkers(spleen.immune, ident.1 = 15, min.pct = 0.25)
+
+#Clusters 
+cluster_ids <- c("B cell", "B cell", "Myeloid", "CD4 T cell", "CD8 T cell", "Myeloid", "Myeloid", "CD8 T cell", "NK cell", "Plasma cell", "CD8 T cell", "CD8 T cell", "NK cell", "ILC")
+names(cluster_ids) <- levels(spleen.immune)
+spleen.immune.labels <- RenameIdents(spleen.immune, cluster_ids)
+rm(cluster_ids)
+DimPlot(spleen.immune.labels, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(spleen.immune.labels, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) + NoLegend()
+
+
+save(spleen.immune, file = "Spleen.Immune.rds")
