@@ -1,0 +1,125 @@
+library(dplyr)
+library(Seurat) 
+library(patchwork)
+library(ggplot2)
+library(readr)
+library(harmony)
+library(Matrix)
+
+
+#Merge Islets and spleen 
+Merged_Pancreas$dataorigin <- "Islets"
+spleen.immune$dataorigin <- "Spleen"
+spleen.islets.first <- merge(x = Merged_Pancreas, y = spleen.immune)
+
+# taking out high mitochrondrial genes
+spleen.islets.first[["percent.mt"]] <- PercentageFeatureSet(spleen.islets.first, pattern = "^MT-")
+VlnPlot(spleen.islets.first, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+spleen.islets.first <- subset(spleen.islets.first, subset = nFeature_RNA > 0 & percent.mt < 10)
+
+#Normalization
+spleen.islets.first <- SCTransform(spleen.islets.first)
+spleen.islets.first <- RunPCA(object = spleen.islets.first)
+spleen.islets.first <- RunHarmony(spleen.islets.first, "dataorigin", plot_convergence = TRUE,assay.use="SCT")
+spleen.islets.first <- RunUMAP(spleen.islets.first, reduction = "harmony",dims = 1:30)
+spleen.islets.first <- FindNeighbors(spleen.islets.first, reduction = "harmony",dims = 1:30)
+spleen.islets.first <- FindClusters(spleen.islets.first, resolution = 0.5)
+DimPlot(spleen.islets.first, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(spleen.islets.first, reduction = "umap", label=TRUE, repel=TRUE, group.by="dataorigin")
+
+#Find Markers
+spleen.islet.cluster0.markers <- FindMarkers(spleen.islets.first, ident.1 = 0, min.pct = 0.25)
+spleen.islet.cluster.1.markers <- FindMarkers(spleen.islets.first, ident.1 = 1, min.pct = 0.25)
+spleen.islet.cluster.2.markers <- FindMarkers(spleen.islets.first, ident.1 = 2, min.pct = 0.25)
+spleen.islet.cluster.3.markers <- FindMarkers(spleen.islets.first, ident.1 = 3, min.pct = 0.25)
+spleen.islet.cluster.4.markers <- FindMarkers(spleen.islets.first, ident.1 = 4, min.pct = 0.25)
+spleen.islet.cluster.5.markers <- FindMarkers(spleen.islets.first, ident.1 = 5, min.pct = 0.25)
+spleen.islet.cluster.6.markers <- FindMarkers(spleen.islets.first, ident.1 = 6, min.pct = 0.25)
+spleen.islet.cluster.7.markers <- FindMarkers(spleen.islets.first, ident.1 = 7, min.pct = 0.25)
+spleen.islet.cluster.8.markers <- FindMarkers(spleen.islets.first, ident.1 = 8, min.pct = 0.25)
+spleen.islet.cluster.9.markers <- FindMarkers(spleen.islets.first, ident.1 = 9, min.pct = 0.25)
+spleen.islet.cluster.10.markers <- FindMarkers(spleen.islets.first, ident.1 = 10, min.pct = 0.25)
+spleen.islet.cluster.11.markers <- FindMarkers(spleen.islets.first, ident.1 = 11, min.pct = 0.25)
+spleen.islet.cluster.12.markers <- FindMarkers(spleen.islets.first, ident.1 = 12, min.pct = 0.25)
+
+
+#Subset out contaminating cells 
+spleen.islets <- subset(spleen.islets.first, subset = seurat_clusters == 0|seurat_clusters == 1|seurat_clusters == 2|seurat_clusters == 3|seurat_clusters == 4|seurat_clusters == 5|seurat_clusters == 8|seurat_clusters == 9|seurat_clusters == 10|seurat_clusters == 11|seurat_clusters == 11)
+spleen.islets <- SCTransform(spleen.islets)
+spleen.islets <- RunPCA(object = spleen.islets)
+spleen.islets <- RunHarmony(spleen.islets, "dataorigin", plot_convergence = TRUE,assay.use="SCT")
+spleen.islets <- RunUMAP(spleen.islets, reduction = "harmony",dims = 1:30)
+spleen.islets <- FindNeighbors(spleen.islets, reduction = "harmony",dims = 1:30)
+spleen.islets <- FindClusters(spleen.islets, resolution = 0.75)
+DimPlot(spleen.islets, reduction = "umap", label=TRUE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank())
+DimPlot(spleen.islets, reduction = "umap", label=FALSE, repel=TRUE, group.by="dataorigin") + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) + NoLegend()
+
+save(spleen.islets, file = "Merged.Spleen.Islets.Immune.rds")
+load(file= "Merged.Spleen.Islets.Immune.rds")
+
+#Find Markers
+spleen.islet.cluster0.markers <- FindMarkers(spleen.islets, ident.1 = 0, min.pct = 0.25)
+spleen.islet.cluster.1.markers <- FindMarkers(spleen.islets, ident.1 = 1, min.pct = 0.25)
+spleen.islet.cluster.2.markers <- FindMarkers(spleen.islets, ident.1 = 2, min.pct = 0.25)
+spleen.islet.cluster.3.markers <- FindMarkers(spleen.islets, ident.1 = 3, min.pct = 0.25)
+spleen.islet.cluster.4.markers <- FindMarkers(spleen.islets, ident.1 = 4, min.pct = 0.25)
+spleen.islet.cluster.5.markers <- FindMarkers(spleen.islets, ident.1 = 5, min.pct = 0.25)
+spleen.islet.cluster.6.markers <- FindMarkers(spleen.islets, ident.1 = 6, min.pct = 0.25)
+spleen.islet.cluster.7.markers <- FindMarkers(spleen.islets, ident.1 = 7, min.pct = 0.25)
+spleen.islet.cluster.8.markers <- FindMarkers(spleen.islets, ident.1 = 8, min.pct = 0.25)
+spleen.islet.cluster.9.markers <- FindMarkers(spleen.islets, ident.1 = 9, min.pct = 0.25)
+spleen.islet.cluster.10.markers <- FindMarkers(spleen.islets, ident.1 = 10, min.pct = 0.25)
+spleen.islet.cluster.11.markers <- FindMarkers(spleen.islets, ident.1 = 11, min.pct = 0.25)
+spleen.islet.cluster.12.markers <- FindMarkers(spleen.islets, ident.1 = 12, min.pct = 0.25)
+spleen.islet.cluster.13.markers <- FindMarkers(spleen.islets, ident.1 = 13, min.pct = 0.25)
+spleen.islet.cluster.14.markers <- FindMarkers(spleen.islets, ident.1 = 14, min.pct = 0.25)
+
+#option 1 spleen islet lineages
+cluster_ids <- c("T cell, NK cell, ILC", "T cell, NK cell, ILC", "B cell/ Plasma cell", "T cell, NK cell, ILC", "B cell/ Plasma cell", "Mast Cell", "Myeloid", "Myeloid", "T cell, NK cell, ILC", "T cell, NK cell, ILC", "Myeloid", "T cell, NK cell, ILC",  "Myeloid", "B cell/ Plasma cell", "T cell, NK cell, ILC")
+names(cluster_ids) <- levels(spleen.islets)
+spleen.islets.labels1 <- RenameIdents(spleen.islets, cluster_ids)
+rm(cluster_ids)
+DimPlot(spleen.islets.labels1, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(spleen.islets.labels1, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) + NoLegend()
+DimPlot(spleen.islets.labels1, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) 
+
+
+#option 2 spleen islet cell types 
+cluster_ids <- c("CD8 T cell/NK cell", "CD4 T cell", "B cell", "CD8 T cell", "B cell", "Mast Cell", "Macrophage", "Macrophage", "NK Cell", "CD8 T cell", "Macrophage", "CD4 T cell",  "Macrophage", "Plasma cell", "NK/ILCs")
+names(cluster_ids) <- levels(spleen.islets)
+spleen.islets.labels <- RenameIdents(spleen.islets, cluster_ids)
+rm(cluster_ids)
+DimPlot(spleen.islets.labels, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank())
+DimPlot(spleen.islets.labels, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) + NoLegend()
+DimPlot(spleen.islets.labels, reduction = "umap", label=FALSE, repel=TRUE) + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) 
+
+#Annotations
+spleen.islets.labels$Annotations <- "Placeholder"
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "0", "CD8 T cell/NK cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "1", "CD4 T cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "2", "B cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "3", "CD8 T cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "4", "B cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "5", "Mast cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "6", "Macrophage", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "7", "Macrophage", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "8", "NK cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "9", "CD8 T cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "10", "Macrophage", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "11", "CD4 T cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "12", "Macrophage", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "13", "Plasma cell", spleen.islets.labels$Annotations))
+spleen.islets.labels$Annotations <- (ifelse(spleen.islets.labels$seurat_clusters == "14", "NK/ILCs", spleen.islets.labels$Annotations))
+
+#Dotplots
+DotPlot(spleen.islets.labels, col.min = 0.5, scale = TRUE,  features = c("CD3-TotalSeqC", "CD8a-TotalSeqC", "CD4-TotalSeqC", "CD56-TotalSeqC", "CD127-TotalSeqC", "CD14-TotalSeqC", "HLADR-TotalSeqC", "CD138-TotalSeqC"), cols = c("lightgrey", "#3A9DFF")) + RotatedAxis() + RotatedAxis() + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.text = element_blank(), plot.title = element_blank(), axis.text.x = element_blank())
+DotPlot(spleen.islets.labels, scale = TRUE,  features = c("CD3E", "CD8A", "CD4", "NCAM1", "IL7R", "CD14", "HLA-DRA", "SDC1"), cols = c("lightgrey", "#44a946")) + RotatedAxis() + RotatedAxis() + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.text = element_blank(), plot.title = element_blank(), axis.text.x = element_blank()) 
+DotPlot(spleen.islets.labels, features = c("CD3E", "CD8A", "CD4", "NCAM1", "IL7R", "CD14", "HLA-DRA", "SDC1"), cols = c("lightgrey", "#44a946")) + RotatedAxis() + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.text = element_blank(), plot.title = element_blank(), axis.text.x = element_blank()) + NoLegend()
+
+DotPlot(spleen.islets.labels, col.min = 0.5, scale = TRUE,  features = c("CD3-TotalSeqC", "CD8a-TotalSeqC", "CD4-TotalSeqC", "CD56-TotalSeqC", "CD127-TotalSeqC", "CD14-TotalSeqC", "HLADR-TotalSeqC", "CD138-TotalSeqC"), cols = c("lightgrey", "#3A9DFF")) + RotatedAxis()
+DotPlot(spleen.islets.labels, scale = TRUE,  features = c("CD3E", "CD8A", "CD4", "NCAM1", "IL7R", "CD14", "HLA-DRA", "SDC1"), cols = c("lightgrey", "#44a946")) + RotatedAxis()
+
+#make ggplots 
+ggplot(spleen.islets.labels@meta.data, aes(x=dataorigin, fill=Annotations)) + geom_bar(position = "fill") + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank()) 
+ggplot(spleen.islets.labels@meta.data, aes(x=dataorigin, fill=Annotations)) + geom_bar(position = "fill") 
+
