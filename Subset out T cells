@@ -1,0 +1,99 @@
+#Subset out T cells and SCtransform data
+spleen.islet.Tcell <- subset(spleen.islets, subset = seurat_clusters == 0|seurat_clusters == 1|seurat_clusters == 3|seurat_clusters == 9|seurat_clusters == 11)
+spleen.islet.Tcell <- SCTransform(spleen.islet.Tcell)
+spleen.islet.Tcell <- RunPCA(object = spleen.islet.Tcell)
+spleen.islet.Tcell <- RunUMAP(spleen.islet.Tcell, reduction = "harmony",dims = 1:30)
+spleen.islet.Tcell <- FindNeighbors(spleen.islet.Tcell, reduction = "harmony",dims = 1:30)
+spleen.islet.Tcell <- FindClusters(spleen.islet.Tcell, resolution = 0.6)
+DimPlot(spleen.islet.Tcell, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(spleen.islet.Tcell, reduction = "umap", label=FALSE, repel=TRUE, group.by="dataorigin") + theme (axis.title = element_blank(),  panel.border = element_rect(colour ="black", size=0.25), axis.ticks = element_blank(), axis.text = element_blank(), plot.title = element_blank()) + NoLegend()
+
+save(spleen.islet.Tcell, file="spleen.islet.Tcell.rds")
+
+#find markers
+spleen.islet.Tcell.0.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 0, min.pct = 0.25)
+spleen.islet.Tcell.1.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 1, min.pct = 0.25)
+spleen.islet.Tcell.2.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 2, min.pct = 0.25)
+spleen.islet.Tcell.3.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 3, min.pct = 0.25)
+spleen.islet.Tcell.4.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 4, min.pct = 0.25)
+spleen.islet.Tcell.5.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 5, min.pct = 0.25)
+spleen.islet.Tcell.6.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 6, min.pct = 0.25)
+spleen.islet.Tcell.7.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 7, min.pct = 0.25)
+spleen.islet.Tcell.8.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 8, min.pct = 0.25)
+spleen.islet.Tcell.9.markers <- FindMarkers(spleen.islet.Tcell, ident.1 = 9, min.pct = 0.25)
+
+FeaturePlot(spleen.islet.Tcell, features = "PTPRC", min.cutoff=0, order=TRUE)
+FeaturePlot(spleen.islet.Tcell, features = "CD45-TotalSeqC", min.cutoff=0, order=TRUE)
+
+#remove aggregates 
+spleen.islet.Tcell <- subset(spleen.islet.Tcell, subset = seurat_clusters == 0|seurat_clusters == 1|seurat_clusters == 2|seurat_clusters == 4|seurat_clusters == 5|seurat_clusters == 7|seurat_clusters == 8)
+spleen.islet.Tcell <- SCTransform(spleen.islet.Tcell)
+spleen.islet.Tcell <- RunPCA(object = spleen.islet.Tcell)
+spleen.islet.Tcell <- RunUMAP(spleen.islet.Tcell, reduction = "harmony",dims = 1:30)
+spleen.islet.Tcell <- FindNeighbors(spleen.islet.Tcell, reduction = "harmony",dims = 1:30)
+spleen.islet.Tcell <- FindClusters(spleen.islet.Tcell, resolution = 0.5)
+DimPlot(spleen.islet.Tcell, reduction = "umap", label=TRUE, repel=TRUE)
+DimPlot(spleen.islet.Tcell, reduction = "umap", label=TRUE, repel=TRUE, group.by="dataorigin")
+
+
+#compare marker data 
+
+VlnPlot(spleen.islet.Tcell, features = "CD4", group.by="dataorigin", cols = c("#44a946", "#004d02")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+VlnPlot(spleen.islet.Tcell, features = "CD4-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+
+VlnPlot(spleen.islet.Tcell, features = "CD8A", group.by="dataorigin", cols = c("#44a946", "#004d02")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+VlnPlot(spleen.islet.Tcell, features = "CD8a-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+
+VlnPlot(spleen.islet.Tcell, features = "IL2RA", group.by="dataorigin", cols = c("#44a946", "#004d02")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+VlnPlot(spleen.islet.Tcell, features = "CD25-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+
+VlnPlot(spleen.islet.Tcell, features = "PDCD1", group.by="dataorigin", cols = c("#44a946", "#004d02")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+VlnPlot(spleen.islet.Tcell, features = "PD1-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+
+VlnPlot(spleen.islet.Tcell, features = "CD27", group.by="dataorigin", cols = c("#44a946", "#004d02")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+VlnPlot(spleen.islet.Tcell, features = "CD27-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+
+VlnPlot(spleen.islet.Tcell, features = "CCR6", group.by="dataorigin", cols = c("#44a946", "#004d02")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+VlnPlot(spleen.islet.Tcell, features = "CCR6-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) + theme (axis.title = element_blank(), axis.text = element_blank(), plot.title = element_blank(), axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank()) + NoLegend()
+
+#Add labels 
+VlnPlot(spleen.islet.Tcell, features = "CD4", group.by="dataorigin", cols = c("#44a946", "#004d02"))
+VlnPlot(spleen.islet.Tcell, features = "CD4-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) 
+VlnPlot(spleen.islet.Tcell, features = "CD8A", group.by="dataorigin", cols = c("#44a946", "#004d02"))
+VlnPlot(spleen.islet.Tcell, features = "CD8a-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) 
+VlnPlot(spleen.islet.Tcell, features = "IL2RA", group.by="dataorigin", cols = c("#44a946", "#004d02"))
+VlnPlot(spleen.islet.Tcell, features = "CD25-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1"))
+VlnPlot(spleen.islet.Tcell, features = "PDCD1", group.by="dataorigin", cols = c("#44a946", "#004d02")) 
+VlnPlot(spleen.islet.Tcell, features = "PD1-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1")) 
+VlnPlot(spleen.islet.Tcell, features = "CD27", group.by="dataorigin", cols = c("#44a946", "#004d02"))
+VlnPlot(spleen.islet.Tcell, features = "CD27-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1"))
+VlnPlot(spleen.islet.Tcell, features = "CCR6", group.by="dataorigin", cols = c("#44a946", "#004d02"))
+VlnPlot(spleen.islet.Tcell, features = "CCR6-TotalSeqC", group.by="dataorigin", cols = c("#3A9DFF", "#0051a1"))
+
+#Visualize Markers
+FeaturePlot(spleen.islet.Tcell, features = "CD8A", min.cutoff=0, order=TRUE)
+FeaturePlot(spleen.islet.Tcell, features = "CD8a-TotalSeqC", min.cutoff=1, order=TRUE)
+VlnPlot(spleen.islet.Tcell, features = "CD8A", group.by="dataorigin")
+VlnPlot(spleen.islet.Tcell, features = "CD8a-TotalSeqC", group.by="dataorigin")
+
+FeaturePlot(spleen.islet.Tcell, features = "CD3E", min.cutoff=0, order=TRUE)
+FeaturePlot(spleen.islet.Tcell, features = "CD3-TotalSeqC", min.cutoff=0, order=TRUE)
+VlnPlot(spleen.islet.Tcell, features = "CD3E", group.by="dataorigin")
+VlnPlot(spleen.islet.Tcell, features = "CD3-TotalSeqC", group.by="dataorigin")
+
+FeaturePlot(spleen.islet.Tcell, features = "NCAM1", min.cutoff=1, order=TRUE)
+FeaturePlot(spleen.islet.Tcell, features = "CD56-TotalSeqC", min.cutoff=1, order=TRUE)
+VlnPlot(spleen.islet.Tcell, features = "NCAM1", group.by="dataorigin")
+VlnPlot(spleen.islet.Tcell, features = "CD56-TotalSeqC", group.by="dataorigin")
+
+FeaturePlot(spleen.islet.Tcell, features = "IL7R", min.cutoff=1, order=TRUE)
+FeaturePlot(spleen.islet.Tcell, features = "CD127-TotalSeqC", min.cutoff=1, order=TRUE)
+VlnPlot(spleen.islet.Tcell, features = "IL7R", group.by="dataorigin")
+VlnPlot(spleen.islet.Tcell, features = "CD127-TotalSeqC", group.by="dataorigin")
+
+FeaturePlot(spleen.islet.Tcell, features = "FOXP3", min.cutoff=0, order=TRUE)
+FeaturePlot(spleen.islet.Tcell, features = "CCR4", min.cutoff=0, order=TRUE)
+
+RidgePlot(spleen.islet.Tcell, features = "CD4", ncol = 2)
+RidgePlot(spleen.islet.Tcell, features = "CD4-TotalSeqC", ncol = 2)
+RidgePlot(spleen.islet.Tcell, features = "CD8a-TotalSeqC", ncol = 2)
